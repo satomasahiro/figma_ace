@@ -1,0 +1,7 @@
+{
+  "name": "FigmaAce",
+  "id": "740595332074417285",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html"
+}
