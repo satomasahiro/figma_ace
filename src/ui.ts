@@ -1,5 +1,4 @@
 import './ui.css'
-import { Ace } from './ace';
 
 const ace = require('ace-builds/src-min-noconflict/ace')
 const Tokenizer = ace.require('ace/tokenizer').Tokenizer
@@ -9,54 +8,87 @@ require('ace-builds/src-noconflict/mode-javascript')
 require('ace-builds/src-noconflict/mode-golang')
 require('ace-builds/src-noconflict/mode-html')
 require('ace-builds/src-noconflict/mode-php')
+require("ace-builds/src-noconflict/mode-ruby");
 
 function tokenize(code, mode) {
   const Mode = ace.require('ace/mode/' + mode).Mode
   const HighlightRules = (new Mode).HighlightRules
   const $rules = (new HighlightRules).$rules
-  const tokenizer = new Tokenizer($rules)
+  const tokenizer = new Tokenizer($rules);
   return tokenizer.getLineTokens(code).tokens
 }
 
-const colorMap = new Map([
-  ['text', '#ffffff'],
-  ['entity.name.tag', '#f92672'],
-  ['keyword', '#f92672'],
-  ['keyword.operator', '#f92672'],
-  ['meta.tag', '#f92672'],
-  ['storage', '#f92672'],
-  ['punctuation', '#ffffff'],
-  ['punctuation.tag', '#ffffff'],
-  ['constant.character', '#ae81ff'],
-  ['constant.language', '#ae81ff'],
-  ['constant.numeric', '#ae81ff'],
-  ['constant.other', '#ae81ff'],
-  ['support.constant', '#66d9ef'],
-  ['support.function', '#66d9ef'],
-  ['support.function.firebug', '#66d9ef'],
-  ['storage.type', '#66d9ef'],
-  ['support.class', '#66d9ef'],
-  ['support.type', '#66d9ef'],
-  ['entity.name.function', '#a6e22e'],
-  ['entity.other', '#a6e22e'],
-  ['entity.other.attribute-name', '#a6e22e'],
-  ['variable', '#a6e22e'],
-  ['variable.language', '#a6e22e'],
-  ['variable.parameter', '#fd971f'],
-  ['string', '#e6db74'],
-  ['comment', '#8F908B'],
-  ['string.quasi.start', '#e6db74'],
-  ['string.quasi', '#e6db74'],
-  ['string.quasi.end', '#e6db74'],
-])
+const oldColorObj = {
+  white: "#FFFFFF",
+  red: "#FF0E5B",
+  green: "#A0CA40",
+  yellow: "#F8E186",
+  blue: "#40CEF4",
+  purple: "#B5A4FF",
+  orange: "#FD971F",
+  gray: "#BCC2C6",
+};
 
-function convTokens(tokens) {
-  return tokens.map(token => (
-    {
-      rgb: hexToNormRGB(colorMap.get(token.type) || '#ffffff'),
-      value: token.value,
+const newColorObj = {
+  white: "#FFFFFF",
+  red: "#ED5974",
+  green: "#A0CA40",
+  yellow: "#F8E186",
+  blue: "#40CEF4",
+  purple: "#B5A4FF",
+  orange: "#FD971F",
+  gray: "#BCC2C6",
+};
+
+let selectedColorObj = newColorObj;
+
+const colorMap = new Map([
+  // theme-monokai.jsのcssTextの分類を元に定義
+  ["comment", selectedColorObj["gray"]],
+
+  ["string", selectedColorObj["yellow"]],
+
+  ["variable.parameter", selectedColorObj["orange"]],
+
+  ["entity.other.attribute-name", selectedColorObj["green"]],
+  ["entity.other", selectedColorObj["green"]],
+  ["entity.name.function", selectedColorObj["green"]],
+
+  ["support.type", selectedColorObj["blue"]],
+  ["support.class", selectedColorObj["blue"]],
+  ["storage.type", selectedColorObj["blue"]],
+  ["support.function", selectedColorObj["blue"]],
+  ["support.constant", selectedColorObj["blue"]],
+
+  ["constant.other", selectedColorObj["purple"]],
+  ["constant.numeric", selectedColorObj["purple"]],
+  ["constant.language", selectedColorObj["purple"]],
+  ["constant.character", selectedColorObj["purple"]],
+
+  ["punctuation.tag", selectedColorObj["white"]],
+  ["punctuation", selectedColorObj["white"]],
+
+  ["storage", selectedColorObj["red"]],
+  ["meta.tag", selectedColorObj["red"]],
+  ["keyword", selectedColorObj["red"]],
+  ["entity.name.tag", selectedColorObj["red"]],
+
+]);
+
+function convTokens(tokens: any[]) {
+  return tokens.map((token) => ({
+    rgb: hexToNormRGB(getColor(token)),
+    value: token.value,
+  }));
+}
+
+function getColor(token) {
+  for (let key of colorMap.keys()) {
+    if (String(token.type).indexOf(key) > -1) {
+      return colorMap.get(key);
     }
-  ))
+  }
+  return selectedColorObj["white"];
 }
 
 function hexToNormRGB(hex) {

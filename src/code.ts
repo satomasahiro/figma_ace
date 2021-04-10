@@ -18,6 +18,7 @@ figma.ui.onmessage = async msg => {
       await figma.loadFontAsync(text.fontName as FontName)
       // console.log(msg.tokens)
       msg.tokens.forEach(token => {
+        // console.log(token.value.length + " " + token.rgb);
         text.setRangeFills(cursor, cursor + token.value.length, [{color: token.rgb, type: 'SOLID'}])
         cursor += token.value.length
       })
@@ -26,6 +27,4 @@ figma.ui.onmessage = async msg => {
       figma.closePlugin()
     }
   }
-
-  figma.closePlugin()
 }
