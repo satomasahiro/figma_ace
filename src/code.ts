@@ -16,12 +16,16 @@ figma.ui.onmessage = async msg => {
     let cursor = 0
     try {
       await figma.loadFontAsync(text.fontName as FontName)
-      // console.log(msg.tokens)
-      msg.tokens.forEach(token => {
-        // console.log(token.value.length + " " + token.rgb);
-        text.setRangeFills(cursor, cursor + token.value.length, [{color: token.rgb, type: 'SOLID'}])
-        cursor += token.value.length
-      })
+      console.log(msg.rgbRowArray);
+      msg.rgbRowArray.forEach((rgbRow) => {
+        rgbRow.forEach(rgbInfo => {
+          text.setRangeFills(cursor, cursor + rgbInfo.value.length, [
+            { color: rgbInfo.rgb, type: "SOLID" },
+          ]);
+          cursor += rgbInfo.value.length;
+        });
+        cursor++;
+      });
     } catch(e) {
       console.log(e)
       figma.closePlugin()
