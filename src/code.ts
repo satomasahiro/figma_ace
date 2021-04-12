@@ -26,6 +26,7 @@ figma.ui.onmessage = async msg => {
         });
         cursor++;
       });
+      // figma.closePlugin();
     } catch(e) {
       console.log(e)
       figma.closePlugin()

@@ -24,9 +24,14 @@ function tokenize(code, mode) {
   const tokenizer = new Tokenizer($rules);
   const lineSplitArray = code.split("\n");
   let tokensRowArray = [];
+  // console.log(tokenizer.getLineTokens(code).tokens);
+  let nextState = ""
   for (let i = 0; i < lineSplitArray.length; i++) {
-    const tokensRow = tokenizer.getLineTokens(lineSplitArray[i]).tokens;
-    tokensRowArray.push(tokensRow);
+    const tokensRowData = tokenizer.getLineTokens(lineSplitArray[i], nextState);
+    // console.log(tokensRowData);
+    const tokensRow = tokensRowData.tokens;
+    tokensRowArray.push(tokensRow);    
+    nextState = tokensRowData.state;
   }
   return tokensRowArray;
 }
