@@ -1,15 +1,24 @@
 figma.showUI(__html__)
+figma.ui.resize(240, 80);
 
-const selection = figma.currentPage.selection
-if (selection.length == 0 || selection[0].type != 'TEXT') {
-  alert('Please select a text node you want to highlight')
-  figma.closePlugin()
+let selection, text;
+changeSlection();
+
+
+function changeSlection() {
+  selection = figma.currentPage.selection;
+  if (selection.length == 0 || selection[0].type != "TEXT") {
+    return;
+  }
+
+  text = selection[0] as TextNode;
+  const characters = text.characters.replace(/“|”/g, '"').replace(/‘|’/g, "'");
+  figma.ui.postMessage(characters);
 }
 
-const text = selection[0] as TextNode
-const characters = text.characters.replace(/“|”/g, '"').replace(/‘|’/g, "'")
-
-figma.ui.postMessage(characters)
+figma.on("selectionchange", () => {
+  changeSlection();
+});
 
 figma.ui.onmessage = async msg => {
   if (msg.type === 'highlight') {
@@ -26,7 +35,6 @@ figma.ui.onmessage = async msg => {
         });
         cursor++;
       });
-      // figma.closePlugin();
     } catch(e) {
       console.log(e)
       figma.closePlugin()

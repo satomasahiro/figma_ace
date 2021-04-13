@@ -4,56 +4,66 @@ declare const __html__: string
 declare function require(x: string): any
 
 interface PluginAPI {
-  readonly apiVersion: "1.0.0"
-  readonly command: string
-  readonly root: DocumentNode
-  readonly viewport: ViewportAPI
-  closePlugin(message?: string): void
+  readonly apiVersion: "1.0.0";
+  readonly command: string;
+  readonly root: DocumentNode;
+  readonly viewport: ViewportAPI;
+  closePlugin(message?: string): void;
 
-  showUI(html: string, options?: ShowUIOptions): void
-  readonly ui: UIAPI
+  showUI(html: string, options?: ShowUIOptions): void;
+  readonly ui: UIAPI;
 
-  readonly clientStorage: ClientStorageAPI
+  readonly clientStorage: ClientStorageAPI;
 
-  getNodeById(id: string): BaseNode | null
-  getStyleById(id: string): BaseStyle | null
+  getNodeById(id: string): BaseNode | null;
+  getStyleById(id: string): BaseStyle | null;
 
-  currentPage: PageNode
+  currentPage: PageNode;
 
-  readonly mixed: symbol
+  readonly mixed: symbol;
 
-  createRectangle(): RectangleNode
-  createLine(): LineNode
-  createEllipse(): EllipseNode
-  createPolygon(): PolygonNode
-  createStar(): StarNode
-  createVector(): VectorNode
-  createText(): TextNode
-  createBooleanOperation(): BooleanOperationNode
-  createFrame(): FrameNode
-  createComponent(): ComponentNode
-  createPage(): PageNode
-  createSlice(): SliceNode
+  createRectangle(): RectangleNode;
+  createLine(): LineNode;
+  createEllipse(): EllipseNode;
+  createPolygon(): PolygonNode;
+  createStar(): StarNode;
+  createVector(): VectorNode;
+  createText(): TextNode;
+  createBooleanOperation(): BooleanOperationNode;
+  createFrame(): FrameNode;
+  createComponent(): ComponentNode;
+  createPage(): PageNode;
+  createSlice(): SliceNode;
 
-  createPaintStyle(): PaintStyle
-  createTextStyle(): TextStyle
-  createEffectStyle(): EffectStyle
-  createGridStyle(): GridStyle
+  createPaintStyle(): PaintStyle;
+  createTextStyle(): TextStyle;
+  createEffectStyle(): EffectStyle;
+  createGridStyle(): GridStyle;
 
-  importComponentByKeyAsync(key: string): Promise<ComponentNode>
-  importStyleByKeyAsync(key: string): Promise<BaseStyle>
+  importComponentByKeyAsync(key: string): Promise<ComponentNode>;
+  importStyleByKeyAsync(key: string): Promise<BaseStyle>;
 
-  listAvailableFontsAsync(): Promise<Font[]>
-  loadFontAsync(fontName: FontName): Promise<void>
-  readonly hasMissingFont: boolean
+  listAvailableFontsAsync(): Promise<Font[]>;
+  loadFontAsync(fontName: FontName): Promise<void>;
+  readonly hasMissingFont: boolean;
 
-  createNodeFromSvg(svg: string): FrameNode
+  createNodeFromSvg(svg: string): FrameNode;
 
-  createImage(data: Uint8Array): Image
-  getImageByHash(hash: string): Image
+  createImage(data: Uint8Array): Image;
+  getImageByHash(hash: string): Image;
 
-  group(nodes: ReadonlyArray<BaseNode>, parent: BaseNode & ChildrenMixin, index?: number): FrameNode
-  flatten(nodes: ReadonlyArray<BaseNode>, parent?: BaseNode & ChildrenMixin, index?: number): VectorNode
+  group(
+    nodes: ReadonlyArray<BaseNode>,
+    parent: BaseNode & ChildrenMixin,
+    index?: number
+  ): FrameNode;
+  flatten(
+    nodes: ReadonlyArray<BaseNode>,
+    parent?: BaseNode & ChildrenMixin,
+    index?: number
+  ): VectorNode;
+
+  on(type: "selectionchange" | "currentpagechange" | "close", callback: () => void): void;
 }
 
 interface ClientStorageAPI {

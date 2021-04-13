@@ -181,10 +181,6 @@ document.getElementById("highlight").onclick = () => {
   parent.postMessage({ pluginMessage: { type: "highlight", rgbRowArray: rgbRowArray } }, "*");
 };
 
-document.getElementById("cancel").onclick = () => {
-  parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
-};
-
 onmessage = (event) => {
   text = event.data.pluginMessage;
 };
