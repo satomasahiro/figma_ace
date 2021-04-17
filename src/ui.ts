@@ -206,5 +206,11 @@ function setColorMap(ver) {
 }
 
 onmessage = (event) => {
+  const highlight = document.getElementById("highlight") as HTMLInputElement;
+  if (event.data.pluginMessage === "selection-off") {
+    highlight.disabled = true;
+    return;
+  }
+  highlight.disabled = false;
   text = event.data.pluginMessage;
 };

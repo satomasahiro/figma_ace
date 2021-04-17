@@ -8,6 +8,7 @@ changeSlection();
 function changeSlection() {
   selection = figma.currentPage.selection;
   if (selection.length == 0 || selection[0].type != "TEXT") {
+    figma.ui.postMessage("selection-off");
     return;
   }
 

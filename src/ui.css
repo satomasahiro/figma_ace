@@ -20,6 +20,7 @@ select{
   font-weight: bold;
   border-radius: 4px;
   width: 100%;
+  cursor: pointer;
 }
 
 #highlight:hover{
@@ -28,4 +29,9 @@ select{
 
 #highlight:active{
   background: #127fc7;
+}
+
+#highlight:disabled{
+  background: #a1a1a1;
+  cursor: default;
 }
