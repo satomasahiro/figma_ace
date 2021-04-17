@@ -25,18 +25,18 @@ function tokenize(code, mode) {
   const lineSplitArray = code.split("\n");
   let tokensRowArray = [];
   // console.log(tokenizer.getLineTokens(code).tokens);
-  let nextState = ""
+  let nextState = "";
   for (let i = 0; i < lineSplitArray.length; i++) {
     const tokensRowData = tokenizer.getLineTokens(lineSplitArray[i], nextState);
     // console.log(tokensRowData);
     const tokensRow = tokensRowData.tokens;
-    tokensRowArray.push(tokensRow);    
+    tokensRowArray.push(tokensRow);
     nextState = tokensRowData.state;
   }
   return tokensRowArray;
 }
 
-const oldColorObj = {
+const paletteVer1 = {
   white: "#FFFFFF",
   red: "#FF0E5B",
   green: "#A0CA40",
@@ -47,7 +47,7 @@ const oldColorObj = {
   gray: "#BCC2C6",
 };
 
-const newColorObj = {
+const paletteVer2 = {
   white: "#FFFFFF",
   red: "#ED5974",
   green: "#A0CA40",
@@ -58,83 +58,9 @@ const newColorObj = {
   gray: "#BCC2C6",
 };
 
-let selectedColorObj = newColorObj;
+let currentColorObj;
 
-const colorMap = new Map([
-  // theme-monokai.jsのcssTextの分類を元に定義している。
-  // cssの性質上、後にかかれているものの優先順位が高いので、
-  // Map上では順番を逆にして定義している
-  ["comment", selectedColorObj["gray"]],
-
-  ["string", selectedColorObj["yellow"]],
-
-  // .でつないでいるものはhtml上でclassに分解される
-  // そのため、順番が入れ替わったtokenも同じものとして扱う必要がある
-  ["variable.parameter", selectedColorObj["orange"]],
-  ["parameter.variable", selectedColorObj["orange"]],
-
-  ["entity.other.attribute-name", selectedColorObj["green"]],
-  ["entity.attribute-name.other", selectedColorObj["green"]],
-  ["other.entity.attribute-name", selectedColorObj["green"]],
-  ["other.attribute-name.entity", selectedColorObj["green"]],
-  ["attribute-name.other.entity", selectedColorObj["green"]],
-  ["attribute-name.entity.other", selectedColorObj["green"]],
-
-  ["entity.name.function", selectedColorObj["green"]],
-  ["entity.function.name", selectedColorObj["green"]],
-  ["function.entity.name", selectedColorObj["green"]],
-  ["function.name.entity", selectedColorObj["green"]],
-  ["name.function.entity", selectedColorObj["green"]],
-  ["name.entity.function", selectedColorObj["green"]],
-
-  ["variable", selectedColorObj["green"]],
-
-  ["support.type", selectedColorObj["blue"]],
-  ["type.support", selectedColorObj["blue"]],
-
-  ["support.class", selectedColorObj["blue"]],
-  ["class.support", selectedColorObj["blue"]],
-
-  ["storage.type", selectedColorObj["blue"]],
-  ["type.storage", selectedColorObj["blue"]],
-
-  ["support.function", selectedColorObj["blue"]],
-  ["function.support", selectedColorObj["blue"]],
-
-  ["support.constant", selectedColorObj["blue"]],
-  ["constant.support", selectedColorObj["blue"]],
-
-  ["constant.other", selectedColorObj["purple"]],
-  ["other.constant", selectedColorObj["purple"]],
-
-  ["constant.numeric", selectedColorObj["purple"]],
-  ["numeric.constant", selectedColorObj["purple"]],
-
-  ["constant.language", selectedColorObj["purple"]],
-  ["language.constant", selectedColorObj["purple"]],
-
-  ["constant.character", selectedColorObj["purple"]],
-  ["character.constant", selectedColorObj["purple"]],
-
-  ["punctuation.tag", selectedColorObj["white"]],
-  ["tag.punctuation", selectedColorObj["white"]],
-
-  ["punctuation", selectedColorObj["white"]],
-
-  ["storage", selectedColorObj["red"]],
-
-  ["meta.tag", selectedColorObj["red"]],
-  ["tag.meta", selectedColorObj["red"]],
-
-  ["keyword", selectedColorObj["red"]],
-
-  ["entity.name.tag", selectedColorObj["red"]],
-  ["entity.tag.name", selectedColorObj["red"]],
-  ["tag.entity.name", selectedColorObj["red"]],
-  ["tag.name.entity", selectedColorObj["red"]],
-  ["name.tag.entity", selectedColorObj["red"]],
-  ["name.entity.tag", selectedColorObj["red"]],
-]);
+let colorMap;
 
 function convTokens(tokensRowArray: any[]) {
   let rgbRowArray = [];
@@ -157,7 +83,7 @@ function getColor(token) {
       return colorMap.get(key);
     }
   }
-  return selectedColorObj["white"];
+  return currentColorObj["white"];
 }
 
 function hexToNormRGB(hex) {
@@ -175,11 +101,109 @@ function hexToNormRGB(hex) {
 let text = "";
 
 document.getElementById("highlight").onclick = () => {
-  const select = document.getElementById("language") as HTMLSelectElement;
-  const language = select.value;
+  const selectedLanguage = document.getElementById("language") as HTMLSelectElement;
+  const language = selectedLanguage.value;
+  const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
+  setColorMap(selectedPalette.value);
   const rgbRowArray = convTokens(tokenize(text, language));
   parent.postMessage({ pluginMessage: { type: "highlight", rgbRowArray: rgbRowArray } }, "*");
 };
+
+function setColorMap(ver) {
+  let selectedColorObj;
+  switch (ver) {
+    case "1":
+      selectedColorObj = paletteVer1;
+      break;
+    case "2":
+      selectedColorObj = paletteVer2;
+      break;
+    default:
+      selectedColorObj = paletteVer2;
+      break;
+  }
+  // 同じパレットのままなら返す
+  if (currentColorObj == selectedColorObj) {
+    return;
+  }
+
+  currentColorObj = selectedColorObj;
+  colorMap = new Map([
+    // theme-monokai.jsのcssTextの分類を元に定義している。
+    // cssの性質上、後にかかれているものの優先順位が高いので、
+    // Map上では順番を逆にして定義している
+    ["comment", currentColorObj["gray"]],
+
+    ["string", currentColorObj["yellow"]],
+
+    // .でつないでいるものはhtml上でclassに分解される
+    // そのため、順番が入れ替わったtokenも同じものとして扱う必要がある
+    ["variable.parameter", currentColorObj["orange"]],
+    ["parameter.variable", currentColorObj["orange"]],
+
+    ["entity.other.attribute-name", currentColorObj["green"]],
+    ["entity.attribute-name.other", currentColorObj["green"]],
+    ["other.entity.attribute-name", currentColorObj["green"]],
+    ["other.attribute-name.entity", currentColorObj["green"]],
+    ["attribute-name.other.entity", currentColorObj["green"]],
+    ["attribute-name.entity.other", currentColorObj["green"]],
+
+    ["entity.name.function", currentColorObj["green"]],
+    ["entity.function.name", currentColorObj["green"]],
+    ["function.entity.name", currentColorObj["green"]],
+    ["function.name.entity", currentColorObj["green"]],
+    ["name.function.entity", currentColorObj["green"]],
+    ["name.entity.function", currentColorObj["green"]],
+
+    ["variable", currentColorObj["green"]],
+
+    ["support.type", currentColorObj["blue"]],
+    ["type.support", currentColorObj["blue"]],
+
+    ["support.class", currentColorObj["blue"]],
+    ["class.support", currentColorObj["blue"]],
+
+    ["storage.type", currentColorObj["blue"]],
+    ["type.storage", currentColorObj["blue"]],
+
+    ["support.function", currentColorObj["blue"]],
+    ["function.support", currentColorObj["blue"]],
+
+    ["support.constant", currentColorObj["blue"]],
+    ["constant.support", currentColorObj["blue"]],
+
+    ["constant.other", currentColorObj["purple"]],
+    ["other.constant", currentColorObj["purple"]],
+
+    ["constant.numeric", currentColorObj["purple"]],
+    ["numeric.constant", currentColorObj["purple"]],
+
+    ["constant.language", currentColorObj["purple"]],
+    ["language.constant", currentColorObj["purple"]],
+
+    ["constant.character", currentColorObj["purple"]],
+    ["character.constant", currentColorObj["purple"]],
+
+    ["punctuation.tag", currentColorObj["white"]],
+    ["tag.punctuation", currentColorObj["white"]],
+
+    ["punctuation", currentColorObj["white"]],
+
+    ["storage", currentColorObj["red"]],
+
+    ["meta.tag", currentColorObj["red"]],
+    ["tag.meta", currentColorObj["red"]],
+
+    ["keyword", currentColorObj["red"]],
+
+    ["entity.name.tag", currentColorObj["red"]],
+    ["entity.tag.name", currentColorObj["red"]],
+    ["tag.entity.name", currentColorObj["red"]],
+    ["tag.name.entity", currentColorObj["red"]],
+    ["name.tag.entity", currentColorObj["red"]],
+    ["name.entity.tag", currentColorObj["red"]],
+  ]);
+}
 
 onmessage = (event) => {
   text = event.data.pluginMessage;
