@@ -1,5 +1,5 @@
 figma.showUI(__html__)
-figma.ui.resize(240, 80);
+figma.ui.resize(120, 165);
 
 let selection, text;
 changeSlection();
