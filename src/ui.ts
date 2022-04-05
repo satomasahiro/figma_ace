@@ -62,7 +62,7 @@ let currentColorObj;
 
 let colorMap;
 
-function convTokens(tokensRowArray: any[]) {
+function tokensToRgbRowArray(tokensRowArray: any[]) {
   let rgbRowArray = [];
   tokensRowArray.forEach((tokensRow: any[]) => {
     const rgbRow = tokensRow.map((token) => ({
@@ -105,8 +105,21 @@ document.getElementById("highlight").onclick = () => {
   const language = selectedLanguage.value;
   const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
   setColorMap(selectedPalette.value);
-  const rgbRowArray = convTokens(tokenize(text, language));
+  const tokens = tokenize(text, language);
+  const rgbRowArray = tokensToRgbRowArray(tokens);
   parent.postMessage({ pluginMessage: { type: "highlight", rgbRowArray: rgbRowArray } }, "*");
+};
+
+onmessage = (event) => {
+  const highlight = document.getElementById("highlight") as HTMLInputElement;
+  // テキスト未選択なら「text-unselected」という文字列をcode.tsから送っている
+  if (event.data.pluginMessage === "text-unselected") {
+    highlight.disabled = true;
+    text = "";
+  } else {
+    highlight.disabled = false;
+    text = event.data.pluginMessage;
+  }
 };
 
 function setColorMap(ver) {
@@ -122,8 +135,8 @@ function setColorMap(ver) {
       selectedColorObj = paletteVer2;
       break;
   }
-  // 同じパレットのままなら返す
-  if (currentColorObj == selectedColorObj) {
+  // 同じパレットのままなら処理中断
+  if (currentColorObj === selectedColorObj) {
     return;
   }
 
@@ -204,13 +217,3 @@ function setColorMap(ver) {
     ["name.entity.tag", currentColorObj["red"]],
   ]);
 }
-
-onmessage = (event) => {
-  const highlight = document.getElementById("highlight") as HTMLInputElement;
-  if (event.data.pluginMessage === "selection-off") {
-    highlight.disabled = true;
-    return;
-  }
-  highlight.disabled = false;
-  text = event.data.pluginMessage;
-};

@@ -8,7 +8,7 @@ changeSlection();
 function changeSlection() {
   selection = figma.currentPage.selection;
   if (selection.length == 0 || selection[0].type != "TEXT") {
-    figma.ui.postMessage("selection-off");
+    figma.ui.postMessage("text-unselected");
     return;
   }
 
@@ -26,7 +26,7 @@ figma.ui.onmessage = async msg => {
     let cursor = 0
     try {
       await figma.loadFontAsync(text.fontName as FontName)
-      console.log(msg.rgbRowArray);
+      // console.log(msg.rgbRowArray);
       msg.rgbRowArray.forEach((rgbRow) => {
         rgbRow.forEach(rgbInfo => {
           text.setRangeFills(cursor, cursor + rgbInfo.value.length, [
