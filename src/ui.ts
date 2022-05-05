@@ -12,7 +12,7 @@ require("ace-builds/src-noconflict/mode-ruby");
 require("ace-builds/src-noconflict/mode-php");
 require("ace-builds/src-noconflict/mode-java");
 require("ace-builds/src-noconflict/mode-python");
-require("ace-builds/src-noconflict/mode-mysql");
+require("ace-builds/src-noconflict/mode-sql");
 require("ace-builds/src-noconflict/mode-scss");
 require("ace-builds/src-noconflict/mode-golang");
 
