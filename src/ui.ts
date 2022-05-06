@@ -1,12 +1,6 @@
 import "./ui.css";
 
-const HIGHLIGHT_MODE = {
-  SELECT: "select",
-  ALL: "all",
-  REALTIME: "realtime",
-};
-let highlightMode = HIGHLIGHT_MODE.SELECT;
-
+// ace関連を読み込み
 const ace = require("ace-builds/src-noconflict/ace");
 const Tokenizer = ace.require("ace/tokenizer").Tokenizer;
 require("ace-builds/src-noconflict/theme-monokai");
@@ -21,26 +15,7 @@ require("ace-builds/src-noconflict/mode-sql");
 require("ace-builds/src-noconflict/mode-scss");
 require("ace-builds/src-noconflict/mode-golang");
 
-function tokenize(code, mode) {
-  const Mode = ace.require("ace/mode/" + mode).Mode;
-  const HighlightRules = new Mode().HighlightRules;
-  const $rules = new HighlightRules().$rules;
-  // console.log($rules); // 同等のルールを取得できている
-  const tokenizer = new Tokenizer($rules);
-  const lineSplitArray = code.split("\n");
-  let tokensRowArray = [];
-  // console.log(tokenizer.getLineTokens(code).tokens);
-  let nextState = "";
-  for (let i = 0; i < lineSplitArray.length; i++) {
-    const tokensRowData = tokenizer.getLineTokens(lineSplitArray[i], nextState);
-    // console.log(tokensRowData);
-    const tokensRow = tokensRowData.tokens;
-    tokensRowArray.push(tokensRow);
-    nextState = tokensRowData.state;
-  }
-  return tokensRowArray;
-}
-
+// 色の定義
 const paletteVer1 = {
   white: "#FFFFFF",
   red: "#FF0E5B",
@@ -63,9 +38,54 @@ const paletteVer2 = {
   gray: "#BCC2C6",
 };
 
+// グローバル変数宣言
 let currentColorObj;
-
 let colorMap;
+
+// Highlight!クリック時 起点
+document.getElementById("highlight").onclick = () => {
+  // code.tsにメッセージ送信
+  parent.postMessage({ pluginMessage: { type: "highlight" } }, "*");
+};
+
+// code.tsからハイライトするテキストを受信
+onmessage = (event) => {
+  const targetTexts: string[] = event.data.pluginMessage;
+  const rgbRowsArray = createRgbRowsArray(targetTexts);
+  // code.tsにFill情報を送信
+  parent.postMessage({ pluginMessage: { type: "setFills", rgbRowsArray: rgbRowsArray } }, "*");
+};
+
+function createRgbRowsArray(targetTexts: String[]) {
+  const rgbRowsArray = [];
+  targetTexts.forEach((text) => {
+    const selectedLanguage = document.getElementById("language") as HTMLSelectElement;
+    const language = selectedLanguage.value;
+    const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
+    setColorMap(selectedPalette.value);
+    const tokens = tokenize(text, language);
+    const rgbRowArray = tokensToRgbRowArray(tokens);
+    rgbRowsArray.push(rgbRowArray);
+  });
+  return rgbRowsArray;
+}
+
+function tokenize(code, mode) {
+  const Mode = ace.require("ace/mode/" + mode).Mode;
+  const HighlightRules = new Mode().HighlightRules;
+  const $rules = new HighlightRules().$rules;
+  const tokenizer = new Tokenizer($rules);
+  const lineSplitArray = code.split("\n");
+  let tokensRowArray = [];
+  let nextState = "";
+  for (let i = 0; i < lineSplitArray.length; i++) {
+    const tokensRowData = tokenizer.getLineTokens(lineSplitArray[i], nextState);
+    const tokensRow = tokensRowData.tokens;
+    tokensRowArray.push(tokensRow);
+    nextState = tokensRowData.state;
+  }
+  return tokensRowArray;
+}
 
 function tokensToRgbRowArray(tokensRowArray: any[]) {
   let rgbRowArray = [];
@@ -101,52 +121,6 @@ function hexToNormRGB(hex) {
     g: g / 255,
     b: b / 255,
   };
-}
-
-// highlight-mode 変更時
-document.getElementById("highlight-mode").onchange = () => {
-  const selectedHighlightMode = document.getElementById("highlight-mode") as HTMLSelectElement;
-  highlightMode = selectedHighlightMode.value;
-  // サーバーにメッセージ送信
-  parent.postMessage(
-    { pluginMessage: { type: "changeHighlightMode", highlightMode: highlightMode } },
-    "*"
-  );
-};
-
-// Highlight! クリック時
-document.getElementById("highlight").onclick = () => {
-  // サーバーにメッセージ送信
-  parent.postMessage({ pluginMessage: { type: "highlight" } }, "*");
-};
-
-const highlight = document.getElementById("highlight") as HTMLInputElement;
-// code.tsからメッセージ受信
-onmessage = (event) => {
-  if (highlightMode == HIGHLIGHT_MODE.SELECT && event.data.pluginMessage === "obj-unselected") {
-    // highlight.disabled = true;
-  } else {
-    // highlight.disabled = false;
-    const rgbRow2DArray = createRgbRowArray(event.data.pluginMessage);
-    parent.postMessage(
-      { pluginMessage: { type: "setRgbRowArrays", rgbRow2DArray: rgbRow2DArray } },
-      "*"
-    );
-  }
-};
-
-function createRgbRowArray(selectedTexts: String[]) {
-  const rgbRow2DArray = [];
-  selectedTexts.forEach((text) => {
-    const selectedLanguage = document.getElementById("language") as HTMLSelectElement;
-    const language = selectedLanguage.value;
-    const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
-    setColorMap(selectedPalette.value);
-    const tokens = tokenize(text, language);
-    const rgbRowArray = tokensToRgbRowArray(tokens);
-    rgbRow2DArray.push(rgbRowArray);
-  });
-  return rgbRow2DArray;
 }
 
 function setColorMap(ver) {

@@ -1,93 +1,60 @@
+// UI表示
 figma.showUI(__html__);
-figma.ui.resize(120, 220);
+figma.ui.resize(120, 160);
 
-const HIGHLIGHT_MODE = {
-  SELECT: "select",
-  ALL: "all",
-  REALTIME: "realtime",
+// フォント読込
+const fontName = {
+  family: "Source Code Pro",
+  style: "Regular",
 };
+figma.loadFontAsync(fontName);
 
-let selection,
-  text,
-  highlightMode = HIGHLIGHT_MODE.SELECT;
-changeSlection();
-
-function changeSlection() {
-  if (highlightMode != HIGHLIGHT_MODE.SELECT) {
-    return;
-  }
-
-  selection = figma.currentPage.selection;
-  if (selection.length == 0) {
-    // ui.tsにメッセージ送信
-    figma.ui.postMessage("obj-unselected");
-    return;
-  }
-}
-
-figma.on("selectionchange", () => {
-  changeSlection();
-});
+// グローバル変数宣言
+let targetTextNodes: TextNode[] = [];
+let targetTexts: String[] = [];
 
 // ui.tsからメッセージ受信
-figma.ui.onmessage = async (msg) => {
-  // highlight-mode 変更時
-  if (msg.type === "changeHighlightMode") {
-    highlightMode = msg.highlightMode;
-  }
-
+figma.ui.onmessage = (msg) => {
   // Highlight! クリック時
   if (msg.type === "highlight") {
-    setTextAndNode();
-    figma.ui.postMessage(selectedTexts);
+    initTargetData();
+    // ui.tsに対象のテキスト配列を送る
+    figma.ui.postMessage(targetTexts);
   }
 
-  // Highlight! クリック後のカラー反映時
-  if (msg.type === "setRgbRowArrays") {
-    const rgbRow2DArray: string[][][] = msg.rgbRow2DArray;
-    await figma.loadFontAsync(selectedTextNodes[0].fontName as FontName);
-
-    for (let i = 0; i < rgbRow2DArray.length; i++) {
-      const rgbRowArray = rgbRow2DArray[i];
-      let cursor = 0;
-      try {
-        // console.log(msg.rgbRow2DArray);
-        rgbRowArray.forEach((rgbRow) => {
-          rgbRow.forEach((rgbInfo: any) => {
-            selectedTextNodes[i].setRangeFills(cursor, cursor + rgbInfo.value.length, [
-              { color: rgbInfo.rgb, type: "SOLID" },
-            ]);
-            cursor += rgbInfo.value.length;
-          });
-          cursor++;
-        });
-      } catch (e) {
-        console.log(e);
-        figma.closePlugin();
-      }
-    }
+  // Highlight! クリック後のFillカラー反映時
+  if (msg.type === "setFills") {
+    setFills(msg.rgbRowsArray);
   }
 };
 
-let selectedTextNodes: TextNode[] = [];
-let selectedTexts: String[] = [];
-
-function setTextAndNode() {
-  selectedTexts = [];
-  selectedTextNodes = [];
-  selection.forEach((node) => {
-    findTextNodeRecursively(node);
-  });
+function initTargetData() {
+  targetTexts = [];
+  targetTextNodes = [];
+  if (figma.currentPage.selection.length <= 0) {
+    figma.currentPage.children.forEach((node) => {
+      findTextNodeRecursively(node);
+    });
+  } else {
+    figma.currentPage.selection.forEach((node) => {
+      findTextNodeRecursively(node);
+    });
+  }
 }
 
 function findTextNodeRecursively(item: BaseNode) {
-  if (item.type === "TEXT" && item.name === "body") {
-    const font = item.fontName;
-    if (font["family"] === "Source Code Pro") {
-      selectedTexts.push(item.characters);
-      selectedTextNodes.push(item);
-    }
+  // font familyだけではコードに絞れなかったのでitem.nameも合わせて絞る
+  if (
+    item.type === "TEXT" &&
+    item.name === "body" &&
+    item.fontName["family"] === "Source Code Pro"
+  ) {
+    // smartQuotesは予め置き換えておく
+    const characters = item.characters.replace(/“|”/g, '"').replace(/‘|’/g, "'");
+    targetTexts.push(characters);
+    targetTextNodes.push(item);
   }
+  // 複数Nodeを保持するなら再帰的に探す
   if (
     item.type === "INSTANCE" ||
     item.type === "GROUP" ||
@@ -100,8 +67,25 @@ function findTextNodeRecursively(item: BaseNode) {
   }
 }
 
-function highlightObjects() {
-  text = selection[0] as TextNode;
-  const characters = text.characters.replace(/“|”/g, '"').replace(/‘|’/g, "'");
-  figma.ui.postMessage(characters);
+function setFills(rgbRowsArray: string[][][]) {
+  for (let i = 0; i < rgbRowsArray.length; i++) {
+    const rgbRows = rgbRowsArray[i];
+    const textNode = targetTextNodes[i];
+    // ロジックはaceを真似た
+    let cursor = 0;
+    try {
+      rgbRows.forEach((rgbRow) => {
+        rgbRow.forEach((rgbInfo: any) => {
+          textNode.setRangeFills(cursor, cursor + rgbInfo.value.length, [
+            { color: rgbInfo.rgb, type: "SOLID" },
+          ]);
+          cursor += rgbInfo.value.length;
+        });
+        cursor++;
+      });
+    } catch (e) {
+      console.log(e);
+      figma.closePlugin();
+    }
+  }
 }
