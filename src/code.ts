@@ -1,9 +1,8 @@
-figma.showUI(__html__)
-figma.ui.resize(120, 165);
+figma.showUI(__html__);
+figma.ui.resize(120, 220);
 
 let selection, text;
 changeSlection();
-
 
 function changeSlection() {
   selection = figma.currentPage.selection;
@@ -21,14 +20,14 @@ figma.on("selectionchange", () => {
   changeSlection();
 });
 
-figma.ui.onmessage = async msg => {
-  if (msg.type === 'highlight') {
-    let cursor = 0
+figma.ui.onmessage = async (msg) => {
+  if (msg.type === "highlight") {
+    let cursor = 0;
     try {
-      await figma.loadFontAsync(text.fontName as FontName)
+      await figma.loadFontAsync(text.fontName as FontName);
       // console.log(msg.rgbRowArray);
       msg.rgbRowArray.forEach((rgbRow) => {
-        rgbRow.forEach(rgbInfo => {
+        rgbRow.forEach((rgbInfo) => {
           text.setRangeFills(cursor, cursor + rgbInfo.value.length, [
             { color: rgbInfo.rgb, type: "SOLID" },
           ]);
@@ -36,9 +35,9 @@ figma.ui.onmessage = async msg => {
         });
         cursor++;
       });
-    } catch(e) {
-      console.log(e)
-      figma.closePlugin()
+    } catch (e) {
+      console.log(e);
+      figma.closePlugin();
     }
   }
-}
+};
