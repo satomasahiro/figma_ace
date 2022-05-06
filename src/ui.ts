@@ -1,10 +1,15 @@
 import "./ui.css";
 
+const HIGHLIGHT_MODE = {
+  SELECT: "select",
+  ALL: "all",
+  REALTIME: "realtime",
+};
+let highlightMode = HIGHLIGHT_MODE.SELECT;
+
 const ace = require("ace-builds/src-noconflict/ace");
 const Tokenizer = ace.require("ace/tokenizer").Tokenizer;
-
 require("ace-builds/src-noconflict/theme-monokai");
-
 require("ace-builds/src-noconflict/mode-html");
 require("ace-builds/src-noconflict/mode-css");
 require("ace-builds/src-noconflict/mode-javascript");
@@ -98,29 +103,51 @@ function hexToNormRGB(hex) {
   };
 }
 
-let text = "";
-
-document.getElementById("highlight").onclick = () => {
-  const selectedLanguage = document.getElementById("language") as HTMLSelectElement;
-  const language = selectedLanguage.value;
-  const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
-  setColorMap(selectedPalette.value);
-  const tokens = tokenize(text, language);
-  const rgbRowArray = tokensToRgbRowArray(tokens);
-  parent.postMessage({ pluginMessage: { type: "highlight", rgbRowArray: rgbRowArray } }, "*");
+// highlight-mode 変更時
+document.getElementById("highlight-mode").onchange = () => {
+  const selectedHighlightMode = document.getElementById("highlight-mode") as HTMLSelectElement;
+  highlightMode = selectedHighlightMode.value;
+  // サーバーにメッセージ送信
+  parent.postMessage(
+    { pluginMessage: { type: "changeHighlightMode", highlightMode: highlightMode } },
+    "*"
+  );
 };
 
+// Highlight! クリック時
+document.getElementById("highlight").onclick = () => {
+  // サーバーにメッセージ送信
+  parent.postMessage({ pluginMessage: { type: "highlight" } }, "*");
+};
+
+const highlight = document.getElementById("highlight") as HTMLInputElement;
+// code.tsからメッセージ受信
 onmessage = (event) => {
-  const highlight = document.getElementById("highlight") as HTMLInputElement;
-  // テキスト未選択なら「text-unselected」という文字列をcode.tsから送っている
-  if (event.data.pluginMessage === "text-unselected") {
-    highlight.disabled = true;
-    text = "";
+  if (highlightMode == HIGHLIGHT_MODE.SELECT && event.data.pluginMessage === "obj-unselected") {
+    // highlight.disabled = true;
   } else {
-    highlight.disabled = false;
-    text = event.data.pluginMessage;
+    // highlight.disabled = false;
+    const rgbRow2DArray = createRgbRowArray(event.data.pluginMessage);
+    parent.postMessage(
+      { pluginMessage: { type: "setRgbRowArrays", rgbRow2DArray: rgbRow2DArray } },
+      "*"
+    );
   }
 };
+
+function createRgbRowArray(selectedTexts: String[]) {
+  const rgbRow2DArray = [];
+  selectedTexts.forEach((text) => {
+    const selectedLanguage = document.getElementById("language") as HTMLSelectElement;
+    const language = selectedLanguage.value;
+    const selectedPalette = document.getElementById("palette") as HTMLSelectElement;
+    setColorMap(selectedPalette.value);
+    const tokens = tokenize(text, language);
+    const rgbRowArray = tokensToRgbRowArray(tokens);
+    rgbRow2DArray.push(rgbRowArray);
+  });
+  return rgbRow2DArray;
+}
 
 function setColorMap(ver) {
   let selectedColorObj;
